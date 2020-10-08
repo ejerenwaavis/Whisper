@@ -1,0 +1,15 @@
+<%- include('partials/header'); %>
+
+
+<div class="container mt-5 ">
+  <p class="bodyText text-danger mb-4"> <%= body.error%> </p>
+  <p class="bodyText text-success mb-4"> <%= body.message%> </p>
+
+<i class="fas fa-key fa-3x mt-5"></i>
+<h3 class="mt-3 mb-3 font-weight-normal">Welcome To Secretes</h3>
+<a href="/login" class="btn btn-lg btn-dark ">Sign in</a>
+<a href="/register" class="btn btn-lg btn-light">Register</a>
+</div>
+
+
+<%- include('partials/footer'); %>
