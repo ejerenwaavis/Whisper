@@ -5,7 +5,9 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const ejs = require("ejs");
 const mongoose = require("mongoose");
-const md5 = require("md5");
+
+const bcrypt = require ("bcrypt");
+const saltRounds = 10;
 
 const app = express();
 
@@ -16,7 +18,7 @@ app.use(express.static("public"));
 
 // DATABASE CONNECTION
 // URI
-const uri = "mongodb+srv://Admin-Avis:Password123@db1.s2pl8.mongodb.net/auth-level-1";
+const uri = "mongodb+srv://Admin-Avis:Password123@db1.s2pl8.mongodb.net/auth-level-2";
 mongoose.connect(uri, {useNewUrlParser: true, useUnifiedTopology: true});
 
 const userSchema = new mongoose.Schema({
@@ -44,21 +46,23 @@ app.route("/login")
 })
 .post(function(req,res){
   let body =  new Body("", "", "Login");
-  let password = md5(req.body.password);
+  let password = req.body.password;
   let email = req.body.email;
   User.findOne({email:email}, {}, function(err, foundUser) {
     console.log(foundUser);
     console.log(err);
     if(!err){
       if(foundUser){
-        if (foundUser.password === password) {
-          body.message = "Login Successful";
-          body.title = "Secrete";
-          res.render("secretes", {body:body});
-        }else{
-          body.error = "Invalid username or password";
-          res.render("login",{body:body});
-        }
+        bcrypt.compare(password, foundUser.password, function(err, result){
+          if (result) {
+            body.message = "Login Successful";
+            body.title = "Secrete";
+            res.render("secretes", {body:body});
+          }else{
+            body.error = "Invalid username or password";
+            res.render("login",{body:body});
+          }
+        });
       }
     }else{
       console.log(err);
@@ -77,20 +81,23 @@ app.route("/register")
 })
 .post(function(req, res){
   let body =  new Body("", "", "Register");
-  const newUser = new User({
-    email: req.body.email,
-    password: md5(req.body.password)
-  });
+  bcrypt.hash(req.body.password, saltRounds, function(err,hash){
+    const newUser = new User({
+      email: req.body.email,
+      password: hash
+    });
 
-  newUser.save(function(err,savedUser){
-    if(!err){
-      body.message = "Successfully Registered";
-      res.render("secretes", {body:body});
-    }else{
-      body.error = err;
-      res.render("register", {body:body});
-    }
-  });
+    newUser.save(function(err,savedUser){
+      if(!err){
+        body.message = "Successfully Registered";
+        res.render("secretes", {body:body});
+      }else{
+        body.error = err;
+        res.render("register", {body:body});
+      }
+    });
+  })
+
 })
 
 
