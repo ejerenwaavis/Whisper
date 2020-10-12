@@ -2,33 +2,47 @@
 // let secrete = process.env.SECRETE;
 
 const express = require("express");
-const bodyParser = require("body-parser");
+const app = express();
 const ejs = require("ejs");
+const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
 
-const bcrypt = require ("bcrypt");
-const saltRounds = 10;
-
-const app = express();
+//Authentication & Session Management
+const session = require("express-session");
+const passport = require("passport");
+const passportLocalMongoose = require("passport-local-mongoose");
 
 app.set("view engine","ejs");
 app.use(bodyParser.urlencoded({extended:true}));
 app.use(express.static("public"));
+
+//Authentication & Session Management Config
+app.use(session({secret:"My nig secret",resave:false, saveUninitialized:false}));
+app.use(passport.initialize());
+app.use(passport.session());
 
 
 // DATABASE CONNECTION
 // URI
 const uri = "mongodb+srv://Admin-Avis:Password123@db1.s2pl8.mongodb.net/auth-level-2";
 mongoose.connect(uri, {useNewUrlParser: true, useUnifiedTopology: true});
+mongoose.set("useCreateIndex", true);
 
 const userSchema = new mongoose.Schema({
   email: String,
   password: String
 });
 
-
+// Tell the Schema to use the passportLocalMongoose plugin
+userSchema.plugin(passportLocalMongoose);
 
 const User = mongoose.model("User", userSchema);
+
+passport.use(User.createStrategy());
+passport.serializeUser(User.serializeUser());
+passport.deserializeUser(User.deserializeUser());
+
+
 
 //------- Home Route--------//
 app.route("/")
@@ -37,6 +51,17 @@ app.route("/")
   res.render("home", {body:body});
 })
 
+app.route("/secretes")
+.get(function(req,res){
+  const body = new Body("","","Secretes")
+  if(req.isAuthenticated()){
+    body.message = "Session Active"
+    res.render("secretes", {body:body});
+  }else{
+    body.error = "Session Expired please login"
+    res.render("login", {body:body});
+  }
+})
 
 //------- Login Route--------//
 app.route("/login")
@@ -45,31 +70,21 @@ app.route("/login")
   res.render("login", {body:body});
 })
 .post(function(req,res){
-  let body =  new Body("", "", "Login");
-  let password = req.body.password;
-  let email = req.body.email;
-  User.findOne({email:email}, {}, function(err, foundUser) {
-    console.log(foundUser);
-    console.log(err);
-    if(!err){
-      if(foundUser){
-        bcrypt.compare(password, foundUser.password, function(err, result){
-          if (result) {
-            body.message = "Login Successful";
-            body.title = "Secrete";
-            res.render("secretes", {body:body});
-          }else{
-            body.error = "Invalid username or password";
-            res.render("login",{body:body});
-          }
-        });
-      }
-    }else{
+  const user = new User({
+    username: req.body.username,
+    password: req.body.password
+  })
+  req.login(user, function(err){
+    if(err){
       console.log(err);
-      body.error = err;
-      res.render("login", {body:body})
+      res.render("login", {body:new Body(err,"","Login")})
+    }else{
+      passport.authenticate("local")(req,res, function(){
+        res.render("secretes", {body:new Body(err,"Login Successful","Secretes")})
+      });
     }
   })
+
 })
 
 
@@ -80,26 +95,28 @@ app.route("/register")
   res.render("register", {body:body});
 })
 .post(function(req, res){
-  let body =  new Body("", "", "Register");
-  bcrypt.hash(req.body.password, saltRounds, function(err,hash){
-    const newUser = new User({
-      email: req.body.email,
-      password: hash
-    });
-
-    newUser.save(function(err,savedUser){
-      if(!err){
-        body.message = "Successfully Registered";
-        res.render("secretes", {body:body});
-      }else{
-        body.error = err;
-        res.render("register", {body:body});
-      }
-    });
-  })
+  const body = new Body("","Registered Successfully","Secret");
+  User.register({username: req.body.username}, req.body.password, function(err,user){
+    if(err){
+      console.log(err);
+      body.title = "Register";
+      body.error = err;
+      res.render("register", {body:body});
+    }else{
+      passport.authenticate("local")(req,res, function(){
+        res.redirect("/secretes");
+      })
+    }
+  });
 
 })
 
+
+app.route("/logout")
+.get(function(req,res){
+  req.logout();
+  res.render("home", {body:new Body("","Logout Successful","Home")})
+});
 
 
 // app.route("/secretes")
