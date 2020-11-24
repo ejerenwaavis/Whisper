@@ -98,6 +98,7 @@ app.route("/login")
     res.render("secretes", {body:body});
   }else{
     const body =  new Body("", "", "Login");
+
     res.render("login", {body:body});
   }
 })
@@ -172,6 +173,19 @@ app.route("/auth/google/secretes")
     console.log("Logged IN");
     res.render('secretes', {body:new Body("","Google Authentication Successful", "Secretes")});
   }
+);
+
+app.route("/auth/fb/secretes")
+.get(function(req,res){
+  console.log("Facebook Login");
+  res.render('secretes', {body:new Body("","Facebook Authentication Successful", "Secretes")});
+}
+  // passport.authenticate('google', { failureRedirect: '/login' }),
+  // function(req, res) {
+  //   // Successful authentication, redirect user page.
+  //   console.log("Logged IN");
+  //   res.render('secretes', {body:new Body("","Google Authentication Successful", "Secretes")});
+  // }
 );
 
 

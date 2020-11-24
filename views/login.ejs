@@ -18,20 +18,24 @@
   </div>
   <button class="btn btn-lg btn-primary btn-block" type="submit">Sign in</button>
   <div class="mt-4 ">
-    <a href="/auth/google" class="btn btn-lg btn-block btn-social btn-google">
+    <a href="/auth/google" class=" btn btn-lg btn-block btn-social btn-google">
       <span class="fab fa-google"></span>
-      Sign in with Twitter
+      Sign in with Google
     </a>
-    <!-- <a href="/auth/google" class="btn btn-primary btn-lg">
-      <i class="fab fa-google fa-bold"></i>
-      Continue with Google
-    </a> -->
+
+  </div>
+  <div class="mt-4">
+    <a href="#" onclick="fblogin()" class="btn btn-lg btn-block btn-social btn-facebook">
+      <span class="fab fa-facebook"></span>
+      Continue with Facebook
+    </a>
+    <!-- <div class="fb-login-button btn-lg btn-block" data-size="large" data-button-type="continue_with" data-layout="default" data-auto-logout-link="false" data-use-continue-as="false" data-width=""></div> -->
   </div>
 
   <!-- <button type="button" class="btn btn-gplus"><i class="fab fa-google-plus-g pr-1"></i> Google +</button> -->
 
 
-
 </form>
+<!-- <a href="#" onclick="fblogout()" class="btn btn-danger btn-sm btn-block">FB Logout</a> -->
 
 <%- include('partials/footer'); %>
